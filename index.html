@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W.T.S | HUB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@100;300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --emerald: #10b981;
+            --deep-emerald: #022c22;
+            --gold: #d4af37;
+            --gold-bright: #f9d976;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: var(--deep-emerald); border-radius: 10px; }
+
+        body, html {
+            margin: 0; padding: 0; 
+            background: #000; color: white;
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* ЭКРАН ПРОВЕРКИ */
+        #verify-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            transition: 0.8s;
+        }
+
+        .verify-btn {
+            padding: 20px 40px;
+            background: transparent;
+            border: 1px solid var(--emerald);
+            color: var(--emerald);
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            letter-spacing: 5px;
+            cursor: pointer;
+            transition: 0.4s;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .verify-btn:hover {
+            background: var(--emerald);
+            color: #000;
+            box-shadow: 0 0 40px var(--emerald);
+        }
+
+        /* КНОПКА ЗВУКА */
+        #mute-btn {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 1001; width: 45px; height: 45px;
+            border: 1px solid var(--emerald);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            color: var(--emerald);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; opacity: 0.6;
+        }
+        #mute-btn:hover { opacity: 1; transform: scale(1.1); box-shadow: 0 0 15px var(--emerald); }
+
+        .hero-section {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 2000px;
+            overflow: hidden;
+            filter: blur(10px);
+            transition: 1s;
+        }
+
+        .video-wrapper {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        #video-bg {
+            min-width: 100%; min-height: 100%;
+            width: auto; height: auto;
+            object-fit: cover;
+            filter: brightness(0.7) contrast(1.15);
+        }
+
+        .video-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(2, 44, 34, 0.1) 0%, rgba(0,0,0,0.95) 100%);
+            z-index: 2; pointer-events: none;
+        }
+
+        .screen-frame {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 100;
+            border: 5px solid transparent;
+            box-sizing: border-box;
+            border-image: linear-gradient(var(--angle, 0deg), var(--deep-emerald), var(--emerald), var(--deep-emerald)) 1;
+            animation: rotateFrame 4s linear infinite;
+        }
+        @property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+        @keyframes rotateFrame { to { --angle: 360deg; } }
+
+        #follow-box {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; max-width: 500px;
+            display: flex; flex-direction: column;
+            z-index: 10;
+            transition: transform 0.15s ease-out;
+            will-change: transform;
+            pointer-events: none;
+        }
+
+        .btn-stack {
+            display: flex; flex-direction: column;
+            gap: 18px; width: 100%; padding: 0 40px; box-sizing: border-box;
+            pointer-events: auto;
+        }
+
+        .btn {
+            position: relative; padding: 22px;
+            text-decoration: none; color: white;
+            text-transform: uppercase; letter-spacing: 5px;
+            font-weight: 700; font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: perspective(1000px) translateZ(50px) translateY(-8px);
+            background: rgba(16, 185, 129, 0.15);
+            border-color: #fff;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 20px var(--emerald);
+            color: var(--gold-bright);
+        }
+
+        .info-section {
+            position: relative; min-height: 100vh; width: 100%;
+            background: linear-gradient(to bottom, #000 0%, #01110b 100%);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 5; padding: 120px 0;
+            filter: blur(10px); transition: 1s;
+        }
+
+        .info-container { max-width: 900px; padding: 0 40px; text-align: center; }
+        .manifesto-text { font-family: 'Cinzel', serif; font-size: clamp(1.4rem, 4vw, 2.3rem); line-height: 1.8; color: #fff; }
+        .manifesto-block { margin-bottom: 45px; min-height: 4rem; }
+        .highlight { color: var(--emerald); font-weight: 900; text-shadow: 0 0 15px var(--emerald); }
+        .gold-line { width: 60px; height: 2px; background: var(--gold); margin: 35px auto; opacity: 0; transition: opacity 1s; }
+        .gold-line.visible { opacity: 1; }
+        
+        .dust { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.12; z-index: 3; pointer-events: none; }
+        .cursor { display: inline-block; width: 8px; height: 1.8rem; background-color: var(--emerald); margin-left: 5px; animation: blink 0.7s infinite; vertical-align: middle; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* ===== МОДАЛЬНОЕ ОКНО ДЛЯ ССЫЛКИ ===== */
+        #link-modal {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 5000;
+            justify-content: center; align-items: center;
+        }
+        #link-modal.active { display: flex; }
+
+        .modal-box {
+            border: 1px solid var(--emerald);
+            background: #000;
+            max-width: 480px; width: 90%;
+            padding: 40px;
+            box-shadow: 0 0 60px rgba(16,185,129,0.3);
+            text-align: center;
+            animation: modalIn 0.4s ease;
+        }
+        @keyframes modalIn { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
+
+        .modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            letter-spacing: 4px;
+            color: var(--emerald);
+            margin-bottom: 20px;
+        }
+
+        .modal-warning {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .modal-warning b { color: var(--gold); }
+
+        .modal-timer {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            color: white;
+            margin: 20px 0;
+            letter-spacing: 3px;
+        }
+
+        .modal-timer.urgent { color: #ef4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+        .modal-link-btn {
+            display: block; width: 100%; padding: 18px;
+            background: var(--emerald);
+            color: #000;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            text-decoration: none;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin: 20px 0 10px;
+            transition: 0.3s;
+            box-sizing: border-box;
+            cursor: pointer;
+            border: none;
+        }
+        .modal-link-btn:hover { background: var(--gold); box-shadow: 0 0 30px var(--gold); }
+
+        .modal-attempts {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 2px;
+        }
+
+        .modal-close {
+            margin-top: 20px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.4);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            padding: 10px 25px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .modal-close:hover { border-color: var(--emerald); color: var(--emerald); }
+
+        /* Исчерпаны попытки */
+        .modal-exhausted {
+            color: #ef4444;
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 768px) {
+            .btn-stack { padding: 0 20px; gap: 12px; }
+            .btn { padding: 16px; font-size: 0.75rem; letter-spacing: 2px; }
+            .manifesto-text { font-size: clamp(1.1rem, 5vw, 1.5rem); }
+            .screen-frame { border-width: 3px; }
+        }
+
+        @media (max-height: 700px) {
+            .btn { padding: 14px; }
+            .manifesto-block { margin-bottom: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="verify-screen">
+        <button class="verify-btn" onclick="verifyUser()">VERIFY HUMANITY</button>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="mute-btn" onclick="toggleMute(event)">
+        <i id="mute-icon" class="fa-solid fa-volume-high"></i>
+    </div>
+
+    <div class="screen-frame"></div>
+    <div class="dust"></div>
+
+    <section class="hero-section" id="hero">
+        <div class="video-wrapper">
+            <video id="video-bg" loop muted playsinline preload="auto">
+                <source src="Untitled_YOECU2A6.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="video-overlay"></div>
+
+        <div id="follow-box">
+            <div class="btn-stack">
+                <a class="btn" id="main-chat-btn" onclick="openMainChat(event)">
+                    <i class="fa-solid fa-comments"></i> 💬 Основной чат
+                </a>
+                <a class="btn" href="https://t.me/wtsprj" target="_blank"><i class="fa-solid fa-bullhorn"></i> 📢 News Channel</a>
+                <a class="btn" href="https://t.me/WTSGARANTEDBOT" target="_blank"><i class="fa-solid fa-shield-halved"></i> 🔒 Escrow Bot 0%</a>
+                <a class="btn" href="https://t.me/wtsproject" target="_blank"><i class="fa-solid fa-book"></i> 📖 WTS FAQ</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="info-section" id="info">
+        <div class="info-container manifesto-text" id="manifesto">
+            <div class="manifesto-block"><span id="line1"></span><div class="gold-line" id="sep1"></div></div>
+            <div class="manifesto-block"><span id="line2"></span><div class="gold-line" id="sep2"></div></div>
+            <div class="manifesto-block"><span id="line3"></span></div>
+        </div>
+    </section>
+
+    <!-- МОДАЛКА -->
+    <div id="link-modal">
+        <div class="modal-box">
+            <div class="modal-title">⚡ ДОСТУП К ОСНОВНОМУ ЧАТУ</div>
+            <div class="modal-warning">
+                Ссылка одноразовая и действует <b>10 минут</b>.<br>
+                Использований осталось: <b id="attempts-left">—</b> из 3.<br>
+                Таймер не сбрасывается при перезагрузке.
+            </div>
+            <div class="modal-timer" id="modal-timer">10:00</div>
+            <div id="modal-content">
+                <!-- сюда рендерится кнопка или сообщение -->
+            </div>
+            <div class="modal-attempts" id="modal-attempts-info"></div>
+            <button class="modal-close" onclick="closeModal()">✕ ЗАКРЫТЬ</button>
+        </div>
+    </div>
+
+    <script>
+        const v = document.getElementById('video-bg');
+        const m = document.getElementById('bg-music');
+        const box = document.getElementById('follow-box');
+        const muteIcon = document.getElementById('mute-icon');
+
+        m.volume = 0.1;
+
+        // ===== СИСТЕМА ЗАЩИЩЁННЫХ ССЫЛОК =====
+        // Реальная ссылка спрятана здесь, зашифрована base64 для лёгкой обфускации
+        // Перед деплоем можно заменить на другую производную ссылку
+        const REAL_LINK_B64 = btoa("https://t.me/+WnmBiSONJkY4NmVl");
+
+        const STORAGE_KEY = 'wts_invite_state';
+        const MAX_ATTEMPTS = 3;
+        const TIMER_DURATION = 10 * 60 * 1000; // 10 минут в мс
+
+        let timerInterval = null;
+
+        function getState() {
+            try {
+                const s = localStorage.getItem(STORAGE_KEY);
+                return s ? JSON.parse(s) : null;
+            } catch { return null; }
+        }
+
+        function saveState(state) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function openMainChat(e) {
+            e.preventDefault();
+            let state = getState();
+
+            // Новый пользователь — создаём состояние
+            if (!state) {
+                state = {
+                    attemptsLeft: MAX_ATTEMPTS,
+                    startedAt: null,
+                };
+                saveState(state);
+            }
+
+            if (state.attemptsLeft <= 0) {
+                showExhausted();
+                return;
+            }
+
+            // Первый раз нажимает — запускаем таймер
+            if (!state.startedAt) {
+                state.startedAt = Date.now();
+                state.attemptsLeft -= 1;
+                saveState(state);
+            } else {
+                // Таймер уже шёл — проверяем, не истёк ли
+                const elapsed = Date.now() - state.startedAt;
+                if (elapsed >= TIMER_DURATION) {
+                    // Время вышло — новая попытка
+                    if (state.attemptsLeft <= 0) {
+                        showExhausted();
+                        return;
+                    }
+                    state.startedAt = Date.now();
+                    state.attemptsLeft -= 1;
+                    saveState(state);
+                }
+                // иначе — просто показываем оставшееся время, попытку не тратим
+            }
+
+            showModal();
+        }
+
+        function showModal() {
+            const state = getState();
+            document.getElementById('attempts-left').textContent = state.attemptsLeft;
+            document.getElementById('link-modal').classList.add('active');
+
+            const content = document.getElementById('modal-content');
+
+            if (state.attemptsLeft >= 0) {
+                const link = atob(REAL_LINK_B64);
+                content.innerHTML = `
+                    <a class="modal-link-btn" href="${link}" target="_blank" onclick="onLinkClick()">
+                        🚀 ВОЙТИ В ОСНОВНОЙ ЧАТ
+                    </a>
+                `;
+            }
+
+            startVisualTimer(state.startedAt);
+        }
+
+        function onLinkClick() {
+            // Ссылка открыта — просто фиксируем
+        }
+
+        function showExhausted() {
+            document.getElementById('attempts-left').textContent = '0';
+            document.getElementById('link-modal').classList.add('active');
+            document.getElementById('modal-content').innerHTML = `
+                <div class="modal-exhausted">
+                    ⛔ ЛИМИТ ПОЛУЧЕНИЯ ССЫЛКИ ИСЧЕРПАН<br><br>
+                    Вы использовали все 3 попытки.<br>
+                    Свяжитесь с поддержкой через<br>
+                    <b style="color:var(--emerald)">@wtsproject</b>
+                </div>
+            `;
+            document.getElementById('modal-timer').textContent = '—';
+        }
+
+        function startVisualTimer(startedAt) {
+            if (timerInterval) clearInterval(timerInterval);
+
+            const timerEl = document.getElementById('modal-timer');
+
+            function tick() {
+                const elapsed = Date.now() - startedAt;
+                const remaining = TIMER_DURATION - elapsed;
+
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    timerEl.textContent = '00:00';
+                    timerEl.classList.add('urgent');
+                    return;
+                }
+
+                const min = Math.floor(remaining / 60000);
+                const sec = Math.floor((remaining % 60000) / 1000);
+                timerEl.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+                timerEl.classList.toggle('urgent', remaining < 60000);
+            }
+
+            tick();
+            timerInterval = setInterval(tick, 1000);
+        }
+
+        function closeModal() {
+            document.getElementById('link-modal').classList.remove('active');
+            if (timerInterval) clearInterval(timerInterval);
+        }
+
+        // ===== СТАНДАРТНЫЕ ФУНКЦИИ =====
+        function verifyUser() {
+            document.getElementById('verify-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('verify-screen').style.display = 'none';
+                document.getElementById('hero').style.filter = 'none';
+                document.getElementById('info').style.filter = 'none';
+                startMedia();
+            }, 800);
+        }
+
+        function startMedia() {
+            v.play().catch(() => {});
+            m.play().catch(() => {});
+        }
+
+        function toggleMute(e) {
+            e.stopPropagation();
+            if (m.muted) {
+                m.muted = false;
+                muteIcon.className = "fa-solid fa-volume-high";
+            } else {
+                m.muted = true;
+                muteIcon.className = "fa-solid fa-volume-xmark";
+            }
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (window.innerWidth > 1024 && window.scrollY < 400) {
+                const strength = 25; 
+                const x = (e.clientX - window.innerWidth / 2) / strength;
+                const y = (e.clientY - window.innerHeight / 2) / strength;
+                const tiltX = (window.innerWidth / 2 - e.pageX) / 50;
+                const tiltY = (window.innerHeight / 2 - e.pageY) / 50;
+                box.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotateY(${tiltX}deg) rotateX(${-tiltY}deg)`;
+            }
+        });
+
+        const lines = [
+            { id: "line1", text: "WTS Project — это результат пути, собранный из опыта, внимания и времени.", sep: "sep1" },
+            { id: "line2", text: "Мы создаём не спеша, но с точностью в каждом шаге.", sep: "sep2" },
+            { id: "line3", text: "Здесь ценится процесс и то, что остаётся после него.", sep: null }
+        ];
+
+        let currentLine = 0; let isStarted = false;
+        function startChain() { if (isStarted) return; isStarted = true; typeNextLine(); }
+
+        function typeNextLine() {
+            if (currentLine >= lines.length) return;
+            const lineData = lines[currentLine];
+            const el = document.getElementById(lineData.id);
+            let i = 0;
+            el.innerHTML = '<span class="text-content"></span><span class="cursor"></span>';
+            const contentSpan = el.querySelector('.text-content');
+            function format(t) { return t.replace(/WTS Project|точностью|после него/g, match => `<span class="highlight">${match}</span>`); }
+            const interval = setInterval(() => {
+                contentSpan.innerHTML = format(lineData.text.substring(0, i + 1));
+                i++;
+                if (i >= lineData.text.length) {
+                    clearInterval(interval);
+                    if (el.querySelector('.cursor')) el.querySelector('.cursor').remove();
+                    if (lineData.sep) document.getElementById(lineData.sep).classList.add('visible');
+                    currentLine++; setTimeout(typeNextLine, 600);
+                }
+            }, 35);
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) startChain();
+        }, { threshold: 0.4 });
+        observer.observe(document.getElementById('manifesto'));
+
+        setInterval(() => { if (v.paused && document.getElementById('verify-screen').style.display === 'none') v.play(); }, 1500);
+    </script>
+</body>
+</html>
